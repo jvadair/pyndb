@@ -1,0 +1,8 @@
+LICENSE
+README.md
+setup.py
+pyndb/__init__.py
+pyndb.egg-info/PKG-INFO
+pyndb.egg-info/SOURCES.txt
+pyndb.egg-info/dependency_links.txt
+pyndb.egg-info/top_level.txt
