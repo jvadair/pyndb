@@ -22,7 +22,7 @@ the sole purpose of saving dictionaries to files, and was not released to the pu
 
 # TODO: create a rename function
 
-class DataManager:
+class PYNDatabase:
     def __init__(self, file, autosave=False):
         if file.__class__ is dict:
             self.file = None
