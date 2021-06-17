@@ -1,4 +1,4 @@
-[![PyPI version pyndb](https://raw.githubusercontent.com/jvadair/pyndb/main/package/pypi_badge.svg)](https://pypi.org/project/pyndb/)
+[![PyPI version pyndb](https://raw.githubusercontent.com/jvadair/pyndb/main/github_assets/pypi_badge.svg)](https://pypi.org/project/pyndb/)
 # pyndb
 PYN DB is a pacakge which allows easily saving data to a file, while also providing syntactic convenience. It utilizes a Node structure which allows for easily retrieving nested objects. All data is stored to file as nested dictionaries, and wrapped inside of a custom Node object. It  provides additional capabilities such as autosave, saving a dictionary to file, creating a file if none exists, and more. The original program was developed with  the sole purpose of saving dictionaries to files, and was not released to the public.
 
@@ -56,3 +56,8 @@ This method can be easily understood with the aid of a before and after diagram:
 > None
 ### After
 > {'new_name': None}
+
+## IDEs not playing nice
+Some IDEs may throw errors saying that the PYNDatabase class does not have the attribute you requested. Technically, they're not wrong, as it hasn't been created yet. In PyCharm, the fix is simple: enter the context actions menu, and select `"Mark all unresolved attributes of PYNDatabase as ignored."` as shown in the image below:  
+
+![Pycharm fix](https://raw.githubusercontent.com/jvadair/pyndb/main/github_assets/pycharm_fix.png)
