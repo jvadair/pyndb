@@ -1,6 +1,6 @@
 [![PyPI version pyndb](https://raw.githubusercontent.com/jvadair/pyndb/main/package/pypi_badge.svg)](https://pypi.org/project/pyndb/)
 # pyndb
- PYN DB, originally named DataManager, is a method for easily saving data to a file, while also providing syntactic convenience. It utilizes a Node structure which allows for easily retrieving nested objects. All data is stored to file as nested dictionaries, and wrapped inside of a custom Node object. It  provides additional capabilities such as autosave, saving a dictionary to file, creating a file if none exists, and more. The original program was developed with  the sole purpose of saving dictionaries to files, and was not released to the public.
+PYN DB is a pacakge which allows easily saving data to a file, while also providing syntactic convenience. It utilizes a Node structure which allows for easily retrieving nested objects. All data is stored to file as nested dictionaries, and wrapped inside of a custom Node object. It  provides additional capabilities such as autosave, saving a dictionary to file, creating a file if none exists, and more. The original program was developed with  the sole purpose of saving dictionaries to files, and was not released to the public.
 
 ## Install
 To install, you can either install via pip:  
