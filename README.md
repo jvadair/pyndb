@@ -22,35 +22,35 @@ Since values are stored as Node objects, object retrieval will look something li
 `PYNDatabase.Node.Node.val`  
   
 `val` is a variable which contains the value of the Node, and is linked to the original dictionary object.  
-  
+
 To retrieve a dynamic object, you can use the `get` method like this:  
 `PYNDatabase.Node.get('name_of_node').Node.val`  
-  
+
 This way, you can avoid writing code like this:  
 `eval(f'PYNDatabase.Node.{name_of_node}.Node.val')`  
 
 ## Changing values
 To change the value of a Node, you must use the `set` method from the parent Node. The set method uses the following arguments:  
 `set(name, val, create_if_not_exist=True)`  
-  
+
 Sample usage would look something like this:  
 `PYNDatabase.Node.set('name_of_node', new_value)`  
-  
+
 `set` will create new values if they don't exist, but this can be changed by setting `create_if_not_exist` to False. This way it will just raise a NameError.  
-  
+
 ## Creating new values
 To create a new subnode, you can use the `create` method. It uses the following arguments:  
-`create(name, val=None)`  
-As you can see, the value is set to None by default, but can easily be changed by modifying the `val` flag, or using the `set` method.  
+`create(name, val={})`  
+As you can see, the value is set to an empty dictionary by default, but can easily be changed by modifying the `val` flag, or using the `set` method.  
 If the name given is already in use, an `AlreadyExists` Exception will be raised.  
-  
+
 ## Deleting values
 To delete a Node, you can use the `delete` method. The only argument it takes is the `name` parameter.  
-  
+
 ## The transform method
 The `transform` method places the existing value of a Node into a dictionary under a user-defined key. The arguments for this method are shown below:  
 `transform(name, new_name)`  
-  
+
 This method can be easily understood with the aid of a before and after diagram:  
 ### Before
 > None

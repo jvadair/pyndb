@@ -1,21 +1,21 @@
 import os
 
-print('PYN DB v2.64 loaded')
+print('PYN DB v2.65 loaded')
 
 """
-PYN DB v2.64
+PYN DB v2.65
 
 Author: jvadair
 Creation Date: 4-3-2021
 Last Updated: 6-17-2021
 Codename: PynCone
 
-Overview: PYN DB, originally named DataManager, is a method for easily saving 
+Overview: PYN DB, originally named DataManager, is a method for easily saving
 data to a file, while also providing syntactic convenience. It utilizes a Node
-structure which allows for easily retrieving nested objects. All data is stored 
-to file as nested dictionaries, and wrapped inside of a custom Node object. It 
-provides additional capabilities such as autosave, saving a dictionary to file, 
-creating a file if none exists, and more. The original program was developed with 
+structure which allows for easily retrieving nested objects. All data is stored
+to file as nested dictionaries, and wrapped inside of a custom Node object. It
+provides additional capabilities such as autosave, saving a dictionary to file,
+creating a file if none exists, and more. The original program was developed with
 the sole purpose of saving dictionaries to files, and was not released to the public.
 """
 
@@ -66,7 +66,9 @@ class PYNDatabase:
                     raise NameError(f'No such node: {name}')
 
             else:
-                if name not in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
+                if not any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+                    raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
+                elif name not in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
                     target_node = self.get(name)
                     self.val[name] = data
                     if type(data) is dict:  # If the new data is a dictionary
@@ -86,9 +88,11 @@ class PYNDatabase:
             delattr(self, name)  # Removes the Node object
             del self.val[name]  # Removes the key from the represented dictionary
 
-        def create(self, name, val=None):
+        def create(self, name, val={}):
             if hasattr(self, name):
-                if name in self.universal.CORE_NAMES:
+                if not any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+                    raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
+            elif name in self.universal.CORE_NAMES:
                     raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
                 else:
                     raise self.universal.Error.AlreadyExists(name)
@@ -110,6 +114,8 @@ class PYNDatabase:
     # ----- Universal Resources (accessible by Nodes) -----
 
     class Universal:
+
+        VALID_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-'
 
         def __init__(self, save, autosave, node):
             self.save = save
@@ -145,6 +151,9 @@ class PYNDatabase:
             class CoreName(Exception):
                 pass
 
+            class InvalidName(Exception):
+                pass
+
     # ----- Master functions -----
 
     def get(self, name):
@@ -158,7 +167,9 @@ class PYNDatabase:
                 raise NameError(f'No such node: {name}')
 
         else:
-            if name not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES:
+            if not any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+                raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
+            elif name not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES:
                 # Master names are only taken into account in this statement, not in the Node version of set()
                 target_node = self.get(name)
                 self.fileObj[name] = data
@@ -171,9 +182,11 @@ class PYNDatabase:
             else:  # If the name is a Core Name
                 raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
 
-    def create(self, name, val=None):
+    def create(self, name, val={}):
         if hasattr(self, name):
-            if name in self.universal.CORE_NAMES:
+            if not any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+                raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
+            elif name in self.universal.CORE_NAMES:
                 raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
             else:
                 raise self.universal.Error.AlreadyExists(name)
