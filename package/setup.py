@@ -3,11 +3,8 @@ import setuptools
 with open("README.md", "r") as f:
     long_description = f.read()
 
-with open("VERSION", "r") as vfile:
-    version = vfile.read()
-
 setuptools.setup(name="pyndb",
-      version=version,
+      version='2.654',
       packages=["pyndb"],
       author="jvadair",
       author_email="dev@jvadair.com",

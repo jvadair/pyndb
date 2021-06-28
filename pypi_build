@@ -6,6 +6,9 @@ mv package/dist/* package/dist_old/
 cd package
 printf "Enter version #: "
 read vnum
-printf $vnum > VERSION
+printf "Enter previous version #: "
+read pvnum
+repstr="s/version='$pvnum'/version='$vnum'/"
+sed -i $repstr setup.py
 python setup.py sdist
 python -m twine upload dist/*
