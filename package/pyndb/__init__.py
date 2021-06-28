@@ -1,9 +1,9 @@
 import os
 
-print('PYN DB v2.656 loaded')
+print('pyndb v2.656 loaded')
 
 """
-PYN DB v2.656
+pyndb v2.656
 
 Author: jvadair
 Creation Date: 4-3-2021
