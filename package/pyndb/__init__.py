@@ -1,22 +1,23 @@
 import os
 
-print('PYN DB v2.651 loaded')
+print('PYN DB v2.652 loaded')
 
 """
-PYN DB v2.651
+PYN DB v2.652
 
 Author: jvadair
 Creation Date: 4-3-2021
-Last Updated: 6-17-2021
+Last Updated: 6-27-2021
 Codename: PynCone
 
-Overview: PYN DB, originally named DataManager, is a method for easily saving
-data to a file, while also providing syntactic convenience. It utilizes a Node
-structure which allows for easily retrieving nested objects. All data is stored
-to file as nested dictionaries, and wrapped inside of a custom Node object. It
-provides additional capabilities such as autosave, saving a dictionary to file,
-creating a file if none exists, and more. The original program was developed with
-the sole purpose of saving dictionaries to files, and was not released to the public.
+Overview: PYN DB, short for Python Node Database, is a pacakge which makes it
+easy to save data to a file while also providing syntactic convenience. It
+utilizes a Node structure which allows for easily retrieving nested objects. All
+data is wrapped inside of a custom Node object, and stored to file as nested
+dictionaries. It provides additional capabilities such as autosave, saving a 
+dictionary to file, creating a file if none exists, and more. The original
+program was developed with the sole purpose of saving dictionaries to files, and
+was not released to the public.
 """
 
 
@@ -66,7 +67,7 @@ class PYNDatabase:
                     raise NameError(f'No such node: {name}')
 
             else:
-                if not any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+                if any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
                     raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
                 elif name not in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
                     target_node = self.get(name)
@@ -90,7 +91,7 @@ class PYNDatabase:
 
         def create(self, name, val={}):
             if hasattr(self, name):
-                if not any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+                if any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
                     raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
                 elif name in self.universal.CORE_NAMES:
                     raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
@@ -167,7 +168,7 @@ class PYNDatabase:
                 raise NameError(f'No such node: {name}')
 
         else:
-            if not any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+            if any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
                 raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
             elif name not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES:
                 # Master names are only taken into account in this statement, not in the Node version of set()
@@ -184,7 +185,7 @@ class PYNDatabase:
 
     def create(self, name, val={}):
         if hasattr(self, name):
-            if not any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+            if any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
                 raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
             elif name in self.universal.CORE_NAMES:
                 raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
