@@ -1,9 +1,9 @@
 import os
 
-print('PYN DB v2.652 loaded')
+print('PYN DB v2.65.3 loaded')
 
 """
-PYN DB v2.652
+PYN DB v2.65.3
 
 Author: jvadair
 Creation Date: 4-3-2021
@@ -60,27 +60,28 @@ class PYNDatabase:
                     # Each node gains the value of the key it represents
 
         def set(self, name, data, create_if_not_exist=True):
-            if not hasattr(self, name):
+            if any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+                raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
+
+            elif name in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
+                raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
+
+            elif not hasattr(self, name):  # Create if not exist
                 if create_if_not_exist:
                     self.create(name, val=data)
                 else:
                     raise NameError(f'No such node: {name}')
 
-            else:
-                if any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
-                    raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
-                elif name not in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
-                    target_node = self.get(name)
-                    self.val[name] = data
-                    if type(data) is dict:  # If the new data is a dictionary
-                        target_node.__init__(name, self.val[name], self.universal)
-                        # Re-initializes the Node with its new data
-                    else:
-                        target_node.val = data
-                    if self.universal.autosave:
-                        self.universal.save()
+            else:  # Otherwise sets like normal
+                target_node = self.get(name)
+                self.val[name] = data
+                if type(data) is dict:  # If the new data is a dictionary
+                    target_node.__init__(name, self.val[name], self.universal)
+                    # Re-initializes the Node with its new data
                 else:
-                    raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
+                    target_node.val = data
+                if self.universal.autosave:
+                    self.universal.save()
 
         def get(self, name):
             return getattr(self, name)
@@ -91,23 +92,23 @@ class PYNDatabase:
 
         def create(self, name, val={}):
             if hasattr(self, name):
-                if any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
-                    raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
-                elif name in self.universal.CORE_NAMES:
-                    raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
-                else:
-                    raise self.universal.Error.AlreadyExists(name)
+                raise self.universal.Error.AlreadyExists(name)
 
-            elif type(self.val) is dict:
+            elif name in self.universal.CORE_NAMES:
+                raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
+
+            elif type(self.val) is not dict:
+                raise TypeError(f''
+                                f'{self.name} is {str(type(self.val))}, and must be dict. Consider using the '
+                                f'transform method to resolve this issue.')
+
+            elif any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+                raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
+            else:
                 setattr(self, name, self.universal.Node(name, val, self.universal))
                 self.val[name] = val
                 if self.universal.autosave:
                     self.universal.save()
-
-            else:
-                raise TypeError(f''
-                                f'{self.name} is {str(type(self.val))}, and must be dict. Consider using the '
-                                f'transform method to resolve this issue.')
 
         def transform(self, name, new_name):
             self.set(name, {new_name: self.get(name).val})
@@ -161,38 +162,40 @@ class PYNDatabase:
         return getattr(self, name)
 
     def set(self, name, data, create_if_not_exist=True):
-        if not hasattr(self, name):  # If no Node is found
+        if any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+            raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
+
+        elif name in self.universal.CORE_NAMES + self.universal.MASTER_NAMES:  # If the name is a Core Name
+            # Master names are only taken into account in this statement, not in the Node version of set()
+            raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
+
+        elif not hasattr(self, name):  # If no Node is found
             if create_if_not_exist:
                 self.create(name, val=data)
             else:
                 raise NameError(f'No such node: {name}')
 
-        else:
-            if any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
-                raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
-            elif name not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES:
-                # Master names are only taken into account in this statement, not in the Node version of set()
-                target_node = self.get(name)
-                self.fileObj[name] = data
-                if type(data) is dict:  # If the new data is a dictionary
-                    target_node.__init__(name, self.fileObj[name], self.universal)
-                else:
-                    target_node.val = data
-                if self.autosave:
-                    self.save()
-            else:  # If the name is a Core Name
-                raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
+        else:  # Sets normally
+            target_node = self.get(name)
+            self.fileObj[name] = data
+            if type(data) is dict:  # If the new data is a dictionary
+                target_node.__init__(name, self.fileObj[name], self.universal)
+            else:
+                target_node.val = data
+            if self.autosave:
+                self.save()
 
     def create(self, name, val={}):
         if hasattr(self, name):
-            if any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
-                raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
-            elif name in self.universal.CORE_NAMES:
-                raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
-            else:
-                raise self.universal.Error.AlreadyExists(name)
+            raise self.universal.Error.AlreadyExists(name)
 
         # The dict type check is not necessary for a master function, as self.fileObj will always be a dict.
+
+        elif any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+            raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
+
+        elif name in self.universal.CORE_NAMES:
+            raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
 
         else:
             setattr(self, name, self.Node(name, val, self))
