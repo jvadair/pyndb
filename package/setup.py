@@ -4,7 +4,7 @@ with open("README.md", "r") as f:
     long_description = f.read()
 
 setuptools.setup(name="pyndb",
-      version='2.654',
+      version='2.655',
       packages=["pyndb"],
       author="jvadair",
       author_email="dev@jvadair.com",

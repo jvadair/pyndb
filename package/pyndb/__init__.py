@@ -60,7 +60,7 @@ class PYNDatabase:
                     # Each node gains the value of the key it represents
 
         def set(self, name, data, create_if_not_exist=True):
-            if any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+            if any(char not in self.universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
                 raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
 
             elif name in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
@@ -102,7 +102,7 @@ class PYNDatabase:
                                 f'{self.name} is {str(type(self.val))}, and must be dict. Consider using the '
                                 f'transform method to resolve this issue.')
 
-            elif any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+            elif any(char not in self.universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
                 raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
             else:
                 setattr(self, name, self.universal.Node(name, val, self.universal))
@@ -162,7 +162,7 @@ class PYNDatabase:
         return getattr(self, name)
 
     def set(self, name, data, create_if_not_exist=True):
-        if any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+        if any(char not in self.universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
             raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
 
         elif name in self.universal.CORE_NAMES + self.universal.MASTER_NAMES:  # If the name is a Core Name
@@ -191,7 +191,7 @@ class PYNDatabase:
 
         # The dict type check is not necessary for a master function, as self.fileObj will always be a dict.
 
-        elif any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
+        elif any(char not in self.universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
             raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
 
         elif name in self.universal.CORE_NAMES:
