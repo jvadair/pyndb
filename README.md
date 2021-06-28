@@ -20,7 +20,7 @@ If a PYNDatabase object is initialized with a dictionary, it will update the ori
 ## Retrieving values
 Since values are stored as Node objects, object retrieval will look something like this:  
 `PYNDatabase.Node.Node.val`  
-  
+
 `val` is a variable which contains the value of the Node, and is linked to the original dictionary object.  
 
 To retrieve a dynamic object, you can use the `get` method like this:  
@@ -61,3 +61,12 @@ This method can be easily understood with the aid of a before and after diagram:
 Some IDEs may throw errors saying that the PYNDatabase class does not have the attribute you requested. Technically, they're not wrong, as it hasn't been created yet. In PyCharm, the fix is simple: enter the context actions menu, and select `"Mark all unresolved attributes of PYNDatabase as ignored."` as shown in the image below:  
 
 ![Pycharm fix](https://raw.githubusercontent.com/jvadair/pyndb/main/github_assets/pycharm_fix.png)
+
+## Known limitations
+- Nodes cannot contain special characters except for `_` and `-`
+- There is no good way to change the master value (setting `PYNDatabase.fileObj` does not modify the Nodes within the database, only the master value.)
+  - To work around this, simply redeclare the variable your PYNDatabase is stored in with a dictionary, and set `PYNDatabase.file` to the filename.
+
+## Naming conventions
+The proper (though not required) filename extension for a PYNDatabase is `.pyndb`
+> Fun fact: In earlier versions not released to the public, the project was named DataManager and did not use the Node structure. Thus the proper filename extension was `.pydb`. This is partially how the name pyndb came to be.

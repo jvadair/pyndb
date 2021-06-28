@@ -1,9 +1,9 @@
 import os
 
-print('PYN DB v2.65 loaded')
+print('PYN DB v2.651 loaded')
 
 """
-PYN DB v2.65
+PYN DB v2.651
 
 Author: jvadair
 Creation Date: 4-3-2021
@@ -92,7 +92,7 @@ class PYNDatabase:
             if hasattr(self, name):
                 if not any(char not in universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
                     raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
-            elif name in self.universal.CORE_NAMES:
+                elif name in self.universal.CORE_NAMES:
                     raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
                 else:
                     raise self.universal.Error.AlreadyExists(name)
