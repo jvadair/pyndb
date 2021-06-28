@@ -1,16 +1,16 @@
 import os
 
-print('PYN DB v2.655 loaded')
+print('PYN DB v2.656 loaded')
 
 """
-PYN DB v2.655
+PYN DB v2.656
 
 Author: jvadair
 Creation Date: 4-3-2021
-Last Updated: 6-27-2021
+Last Updated: 6-28-2021
 Codename: PynCone
 
-Overview: PYN DB, short for Python Node Database, is a pacakge which makes it
+Overview: pyndb, short for Python Node Database, is a pacakge which makes it
 easy to save data to a file while also providing syntactic convenience. It
 utilizes a Node structure which allows for easily retrieving nested objects. All
 data is wrapped inside of a custom Node object, and stored to file as nested
@@ -198,7 +198,7 @@ class PYNDatabase:
             raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
 
         else:
-            setattr(self, name, self.Node(name, val, self))
+            setattr(self, name, self.Node(name, val, self.universal))
             self.fileObj[name] = val
             if self.autosave:
                 self.save()
