@@ -1,9 +1,9 @@
 import os
 
-print('pyndb v2.657 loaded')
+print('pyndb v2.660 loaded')
 
 """
-pyndb v2.657
+pyndb v2.660
 
 Author: jvadair
 Creation Date: 4-3-2021
@@ -60,10 +60,7 @@ class PYNDatabase:
                     # Each node gains the value of the key it represents
 
         def set(self, name, data, create_if_not_exist=True):
-            if any(char not in self.universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
-                raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
-
-            elif name in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
+            if name in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
                 raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
 
             elif not hasattr(self, name):  # Create if not exist
@@ -101,9 +98,6 @@ class PYNDatabase:
                 raise TypeError(f''
                                 f'{self.name} is {str(type(self.val))}, and must be dict. Consider using the '
                                 f'transform method to resolve this issue.')
-
-            elif any(char not in self.universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
-                raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
             else:
                 setattr(self, name, self.universal.Node(name, val, self.universal))
                 self.val[name] = val
@@ -111,13 +105,20 @@ class PYNDatabase:
                     self.universal.save()
 
         def transform(self, name, new_name):
-            self.set(name, {new_name: self.get(name).val})
+            if type(new_name) is not str:
+                raise InvalidName(f'{new_name} is {type(new_name)}, and must be str')
+
+            elif name in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
+                raise self.universal.Error.CoreName(f'Cannot assign name: {new_name} is a Core Name.')
+
+            else:
+                self.set(name, {new_name: self.get(name).val})
 
     # ----- Universal Resources (accessible by Nodes) -----
 
     class Universal:
 
-        VALID_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-'
+        VALID_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
 
         def __init__(self, save, autosave, node):
             self.save = save
@@ -162,10 +163,7 @@ class PYNDatabase:
         return getattr(self, name)
 
     def set(self, name, data, create_if_not_exist=True):
-        if any(char not in self.universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
-            raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
-
-        elif name in self.universal.CORE_NAMES + self.universal.MASTER_NAMES:  # If the name is a Core Name
+        if name in self.universal.CORE_NAMES + self.universal.MASTER_NAMES:  # If the name is a Core Name
             # Master names are only taken into account in this statement, not in the Node version of set()
             raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
 
@@ -191,9 +189,6 @@ class PYNDatabase:
 
         # The dict type check is not necessary for a master function, as self.fileObj will always be a dict.
 
-        elif any(char not in self.universal.VALID_CHARS for char in list(name)):  # Makes sure all names contain valid characters
-            raise self.universal.Error.InvalidName(f'{name} cannot contain special characters and/or numbers (excluding _ and -).')
-
         elif name in self.universal.CORE_NAMES:
             raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
 
@@ -208,7 +203,15 @@ class PYNDatabase:
         del self.fileObj[name]  # Removes the key from the main dictionary
 
     def transform(self, name, new_name):
-        self.set(name, {new_name: self.get(name).val})
+        if type(new_name) is not str:
+            raise InvalidName(f'{new_name} is {type(new_name)}, and must be str')
+
+        elif name in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
+            # Master name check is not necessary, as the new_name object will be inside of the name Node
+            raise self.universal.Error.CoreName(f'Cannot assign name: {new_name} is a Core Name.')
+
+        else:
+            self.set(name, {new_name: self.get(name).val})
 
     def save(self, file=None):
         if file:
