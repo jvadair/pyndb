@@ -63,9 +63,9 @@ Some IDEs may throw errors saying that the PYNDatabase class does not have the a
 ![Pycharm fix](https://raw.githubusercontent.com/jvadair/pyndb/main/github_assets/pycharm_fix.png)
 
 ## Known limitations
-- Nodes cannot contain special characters except for `_` and `-`
+- Nodes can only be retrieved with the `get` method if they contain special characters or numbers (excluding `_`)
 - There is no good way to change the master value (setting `PYNDatabase.fileObj` does not modify the Nodes within the database, only the master value.)
-  - To work around this, simply redeclare the variable your PYNDatabase is stored in with a dictionary, and set `PYNDatabase.file` to the filename.
+  - To work around this, simply redeclare the variable your PYNDatabase is stored in with a PYNDatabase object containing a dictionary, and set `PYNDatabase.file` to the filename.
 
 ## Naming conventions
 The proper (though not required) filename extension for a PYNDatabase is `.pyndb`
