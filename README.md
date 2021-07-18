@@ -44,6 +44,14 @@ To create a new subnode, you can use the `create` method. It uses the following 
 As you can see, the value is set to an empty dictionary by default, but can easily be changed by modifying the `val` flag, or using the `set` method.  
 If the name given is already in use, an `AlreadyExists` Exception will be raised.  
 
+## Finding values
+To see if a Node with a specific name is located within a parent, you can use the `has` method. The syntax is as follows:  
+`PYNDatabase.Node.has(name)`  
+
+## Checking all values
+To view all of the children inside of a Node, you can call the `values` method (which is basically a glorified version of the `dir` command).  
+This function takes no parameters (and I would like to replace it with a variable in the future if possible).  
+
 ## Deleting values
 To delete a Node, you can use the `delete` method. The only argument it takes is the `name` parameter.  
 

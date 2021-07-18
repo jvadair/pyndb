@@ -1,9 +1,9 @@
 import os
 
-print('pyndb v2.660 loaded')
+print('pyndb v2.672 loaded')
 
 """
-pyndb v2.660
+pyndb v2.672
 
 Author: jvadair
 Creation Date: 4-3-2021
@@ -21,7 +21,7 @@ was not released to the public.
 """
 
 
-# TODO: create a rename function, remove the InvalidName exception
+# TODO: create a rename function
 
 class PYNDatabase:
     def __init__(self, file, autosave=False):
@@ -114,6 +114,16 @@ class PYNDatabase:
             else:
                 self.set(name, {new_name: self.get(name).val})
 
+        def has(self, name):
+            attrs = dir(self)
+            attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES]
+            return True if name in attrs else False
+
+        def values(self):
+            attrs = dir(self)
+            attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES]
+            return attrs
+
     # ----- Universal Resources (accessible by Nodes) -----
 
     class Universal:
@@ -133,7 +143,9 @@ class PYNDatabase:
                 'universal',
                 '__init__',
                 'val',
-                'name'
+                'name',
+                'has',
+                'values'
             ]
             self.MASTER_NAMES = [
                 'Universal',
@@ -212,6 +224,16 @@ class PYNDatabase:
 
         else:
             self.set(name, {new_name: self.get(name).val})
+
+    def has(self, name):
+        attrs = dir(self)
+        attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES]
+        return True if name in attrs else False
+
+    def values(self):
+        attrs = dir(self)
+        attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES]
+        return attrs
 
     def save(self, file=None):
         if file:
