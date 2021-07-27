@@ -1,6 +1,6 @@
 import os
 
-print('pyndb v2.672 loaded')
+print('pyndb v2.673 loaded')
 
 """
 pyndb v2.672
