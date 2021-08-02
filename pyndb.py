@@ -1,14 +1,18 @@
 import os
+from pickle import HIGHEST_PROTOCOL, UnpicklingError
+from pickle import load as load_pickle
+from pickle import dump as save_pickle
 
-print('pyndb v2.673 loaded')
+# print('pyndb v3.0.0 loaded')
+print('Debug version in use!')
 
 """
-pyndb v2.672
+pyndb v3.0.0
 
 Author: jvadair
 Creation Date: 4-3-2021
-Last Updated: 6-28-2021
-Codename: PynCone
+Last Updated: 8-1-2021
+Codename: Pykle
 
 Overview: pyndb, short for Python Node Database, is a pacakge which makes it
 easy to save data to a file while also providing syntactic convenience. It
@@ -24,22 +28,40 @@ was not released to the public.
 # TODO: create a rename function
 
 class PYNDatabase:
-    def __init__(self, file, autosave=False):
+    def __init__(self, file, autosave=False, filetype='pickled'):
         if file.__class__ is dict:
             self.file = None
             self.fileObj = file
         else:
             if os.path.exists(file):
                 self.file = file
-            else:
+            else:  # Create if not exists
                 t = open(file, 'a+')
                 t.close()
-            with open(file, 'r') as temp_file_obj:
-                try:
-                    self.fileObj = eval(temp_file_obj.read())
-                except SyntaxError:
-                    self.fileObj = {}
+            if filetype == 'pickled':
+                with open(file, 'rb') as temp_file_obj:
+                    try:
+                        self.fileObj = load_pickle(temp_file_obj)
+                    except EOFError:  # Could possibly be a bad solution to this
+                        self.fileObj = {}
+                    except UnpicklingError:
+                        print('WARNING: This database was saved as plaintext, '
+                              'but loaded as a pickled database. It has been loaded '
+                              'as plaintext, but this may be deprecated in the '
+                              'future. Check the documentation for further info.')
+                        with open(self.file, 'r') as temp_file_obj:
+                            try:
+                                self.fileObj = eval(temp_file_obj.read())
+                            except SyntaxError:
+                                self.fileObj = {}
+            else:  # Assume plaintext otherwise
+                with open(file, 'r') as temp_file_obj:
+                    try:
+                        self.fileObj = eval(temp_file_obj.read())
+                    except SyntaxError:
+                        self.fileObj = {}
 
+        self.filetype = filetype
         self.val = self.fileObj
         self.autosave = autosave  # Is checked by set() and create() which call universal.save() if True
         self.universal = self.Universal(self.save, self.autosave, self.Node)
@@ -106,7 +128,7 @@ class PYNDatabase:
 
         def transform(self, name, new_name):
             if type(new_name) is not str:
-                raise InvalidName(f'{new_name} is {type(new_name)}, and must be str')
+                raise self.universal.Error.InvalidName(f'{new_name} is {type(new_name)}, and must be str')
 
             elif name in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
                 raise self.universal.Error.CoreName(f'Cannot assign name: {new_name} is a Core Name.')
@@ -116,12 +138,14 @@ class PYNDatabase:
 
         def has(self, name):
             attrs = dir(self)
-            attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES]
+            attrs[:] = [a for a in attrs if
+                        not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES]
             return True if name in attrs else False
 
         def values(self):
             attrs = dir(self)
-            attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES]
+            attrs[:] = [a for a in attrs if
+                        not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES]
             return attrs
 
     # ----- Universal Resources (accessible by Nodes) -----
@@ -216,7 +240,7 @@ class PYNDatabase:
 
     def transform(self, name, new_name):
         if type(new_name) is not str:
-            raise InvalidName(f'{new_name} is {type(new_name)}, and must be str')
+            raise self.universal.Error.InvalidName(f'{new_name} is {type(new_name)}, and must be str')
 
         elif name in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
             # Master name check is not necessary, as the new_name object will be inside of the name Node
@@ -227,24 +251,30 @@ class PYNDatabase:
 
     def has(self, name):
         attrs = dir(self)
-        attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES]
+        attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith(
+            '__')) and a not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES]
         return True if name in attrs else False
 
     def values(self):
         attrs = dir(self)
-        attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES]
+        attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith(
+            '__')) and a not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES]
         return attrs
 
     def save(self, file=None):
         if file:
-            with open(file, 'w') as temp_file_obj:
-                temp_file_obj.write(str(self.fileObj))
-
+            pass
         elif self.file:
-            with open(self.file, 'w') as temp_file_obj:
-                temp_file_obj.write(str(self.fileObj))
+            file = self.file
         else:
             raise self.universal.Error.FileError(
                 'Cannot open file: Class was initiated with dictionary object rather than filename. '
-                'Set the file paramater to save to a file different than the one this class was '
-                'initiated with.')
+                'Set the file argument on this method to save to a file different than the one this class was '
+                'initiated with, or change its file paramater.')
+
+        if self.filetype == 'pickled':
+            with open(file, 'wb') as temp_file_obj:
+                save_pickle(self.fileObj, temp_file_obj, HIGHEST_PROTOCOL)
+        else:  # plaintext
+            with open(file, 'w') as temp_file_obj:
+                temp_file_obj.write(str(self.fileObj))
