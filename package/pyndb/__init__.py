@@ -3,11 +3,10 @@ from pickle import HIGHEST_PROTOCOL, UnpicklingError
 from pickle import load as load_pickle
 from pickle import dump as save_pickle
 
-# print('pyndb v3.0.0 loaded')
-print('Debug version in use!')
+print('pyndb v3.0.1 loaded')
 
 """
-pyndb v3.0.0
+pyndb v3.0.1
 
 Author: jvadair
 Creation Date: 4-3-2021
@@ -29,6 +28,7 @@ was not released to the public.
 
 class PYNDatabase:
     def __init__(self, file, autosave=False, filetype='pickled'):
+        self.filetype = filetype
         if file.__class__ is dict:
             self.file = None
             self.fileObj = file
@@ -49,6 +49,7 @@ class PYNDatabase:
                               'but loaded as a pickled database. It has been loaded '
                               'as plaintext, but this may be deprecated in the '
                               'future. Check the documentation for further info.')
+                        self.filetype = 'plaintext'
                         with open(self.file, 'r') as temp_file_obj:
                             try:
                                 self.fileObj = eval(temp_file_obj.read())
@@ -61,7 +62,6 @@ class PYNDatabase:
                     except SyntaxError:
                         self.fileObj = {}
 
-        self.filetype = filetype
         self.val = self.fileObj
         self.autosave = autosave  # Is checked by set() and create() which call universal.save() if True
         self.universal = self.Universal(self.save, self.autosave, self.Node)
