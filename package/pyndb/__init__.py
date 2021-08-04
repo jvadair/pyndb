@@ -3,10 +3,10 @@ from pickle import HIGHEST_PROTOCOL, UnpicklingError
 from pickle import load as load_pickle
 from pickle import dump as save_pickle
 
-print('pyndb v3.0.1 loaded')
+print('pyndb <DEV> v3.0.2 loaded')
 
 """
-pyndb v3.0.1
+pyndb v3.0.2
 
 Author: jvadair
 Creation Date: 4-3-2021
@@ -50,9 +50,9 @@ class PYNDatabase:
                               'as plaintext, but this may be deprecated in the '
                               'future. Check the documentation for further info.')
                         self.filetype = 'plaintext'
-                        with open(self.file, 'r') as temp_file_obj:
+                        with open(self.file, 'r') as fallback_temp_file_obj:
                             try:
-                                self.fileObj = eval(temp_file_obj.read())
+                                self.fileObj = eval(fallback_temp_file_obj.read())
                             except SyntaxError:
                                 self.fileObj = {}
             else:  # Assume plaintext otherwise
@@ -109,7 +109,11 @@ class PYNDatabase:
             delattr(self, name)  # Removes the Node object
             del self.val[name]  # Removes the key from the represented dictionary
 
-        def create(self, name, val={}):
+        def create(self, name, val=None):
+            # Prevents val from being mutable
+            if val is None:
+                val = {}
+
             if hasattr(self, name):
                 raise self.universal.Error.AlreadyExists(name)
 
@@ -219,7 +223,11 @@ class PYNDatabase:
             if self.autosave:
                 self.save()
 
-    def create(self, name, val={}):
+    def create(self, name, val=None):
+        # Prevents val from being mutable
+        if val is None:
+            val = {}
+
         if hasattr(self, name):
             raise self.universal.Error.AlreadyExists(name)
 
