@@ -3,10 +3,10 @@ from pickle import HIGHEST_PROTOCOL, UnpicklingError
 from pickle import load as load_pickle
 from pickle import dump as save_pickle
 
-print('pyndb <DEV> v3.0.2 loaded')
+print('pyndb v3.0.3 loaded')
 
 """
-pyndb v3.0.2
+pyndb v3.0.3
 
 Author: jvadair
 Creation Date: 4-3-2021
