@@ -1,0 +1,14 @@
+#!/bin/bash
+cp pyndb.py package/pyndb/__init__.py
+cp README.md package/README.md
+cp LICENSE package/LICENSE
+mv package/dist/* package/dist_old/
+cd package
+printf "Enter version #: "
+read vnum
+printf "Enter previous version #: "
+read pvnum
+repstr="s/version='$pvnum'/version='$vnum'/"
+sed -i $repstr setup.py
+python3 setup.py sdist
+python3 -m twine upload dist/*

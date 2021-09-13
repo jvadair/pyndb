@@ -3,14 +3,14 @@ from pickle import HIGHEST_PROTOCOL, UnpicklingError
 from pickle import load as load_pickle
 from pickle import dump as save_pickle
 
-print('pyndb v3.0.3 loaded')
+print('pyndb v3.0.4 loaded')
 
 """
-pyndb v3.0.3
+pyndb v3.0.4
 
 Author: jvadair
 Creation Date: 4-3-2021
-Last Updated: 8-1-2021
+Last Updated: 9-10-2021
 Codename: Pykle
 
 Overview: pyndb, short for Python Node Database, is a pacakge which makes it
@@ -108,6 +108,8 @@ class PYNDatabase:
         def delete(self, name):
             delattr(self, name)  # Removes the Node object
             del self.val[name]  # Removes the key from the represented dictionary
+            if self.universal.autosave:
+                self.universal.save()
 
         def create(self, name, val=None):
             # Prevents val from being mutable
@@ -139,6 +141,8 @@ class PYNDatabase:
 
             else:
                 self.set(name, {new_name: self.get(name).val})
+                if self.universal.autosave:
+                    self.universal.save()
 
         def has(self, name):
             attrs = dir(self)
@@ -181,7 +185,8 @@ class PYNDatabase:
                 'save',
                 'autosave',
                 'file',
-                'fileObj'
+                'fileObj',
+                'filetype'
             ]
 
         class Error:
@@ -245,6 +250,8 @@ class PYNDatabase:
     def delete(self, name):
         delattr(self, name)  # Removes the Node object
         del self.fileObj[name]  # Removes the key from the main dictionary
+        if self.autosave:
+            self.save()
 
     def transform(self, name, new_name):
         if type(new_name) is not str:
@@ -256,6 +263,8 @@ class PYNDatabase:
 
         else:
             self.set(name, {new_name: self.get(name).val})
+            if self.autosave:
+                self.save()
 
     def has(self, name):
         attrs = dir(self)
