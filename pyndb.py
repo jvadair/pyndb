@@ -2,16 +2,18 @@ import os
 from pickle import HIGHEST_PROTOCOL, UnpicklingError
 from pickle import load as load_pickle
 from pickle import dump as save_pickle
+from json import load as load_json
+from json import dumps as save_json
 
-print('pyndb v3.0.4 loaded')
+print('pyndb v3.1.0 loaded')
 
 """
-pyndb v3.0.4
+pyndb v3.1.0
 
 Author: jvadair
 Creation Date: 4-3-2021
 Last Updated: 9-10-2021
-Codename: Pykle
+Codename: Compysition
 
 Overview: pyndb, short for Python Node Database, is a pacakge which makes it
 easy to save data to a file while also providing syntactic convenience. It
@@ -51,16 +53,23 @@ class PYNDatabase:
                               'future. Check the documentation for further info.')
                         self.filetype = 'plaintext'
                         with open(self.file, 'r') as fallback_temp_file_obj:
-                            try:
-                                self.fileObj = eval(fallback_temp_file_obj.read())
-                            except SyntaxError:
+                            if temp_file_obj.read() == '':  # If blank
                                 self.fileObj = {}
+                            else:
+                                self.fileObj = eval(fallback_temp_file_obj.read())
+            elif filetype == 'json':
+                with open(file, 'r') as temp_file_obj:
+                    if temp_file_obj.read() == '':  # If blank
+                        self.fileObj = {}
+                    else:
+                        temp_file_obj.seek(0)  # Must seek because the read method above seeks to the end of the file
+                        self.fileObj = load_json(temp_file_obj)
             else:  # Assume plaintext otherwise
                 with open(file, 'r') as temp_file_obj:
-                    try:
-                        self.fileObj = eval(temp_file_obj.read())
-                    except SyntaxError:
+                    if temp_file_obj.read() == '':  # If blank
                         self.fileObj = {}
+                    else:
+                        self.fileObj = eval(temp_file_obj.read())
 
         self.val = self.fileObj
         self.autosave = autosave  # Is checked by set() and create() which call universal.save() if True
@@ -292,6 +301,9 @@ class PYNDatabase:
         if self.filetype == 'pickled':
             with open(file, 'wb') as temp_file_obj:
                 save_pickle(self.fileObj, temp_file_obj, HIGHEST_PROTOCOL)
+        elif self.filetype == 'json':  # plaintext
+            with open(file, 'w') as temp_file_obj:
+                temp_file_obj.write(save_json(self.fileObj, indent=2, sort_keys=True))
         else:  # plaintext
             with open(file, 'w') as temp_file_obj:
                 temp_file_obj.write(str(self.fileObj))
