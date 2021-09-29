@@ -5,10 +5,10 @@ from pickle import dump as save_pickle
 from json import load as load_json
 from json import dumps as save_json
 
-print('pyndb v3.1.1 loaded')
+print('pyndb v3.1.2 loaded')
 
 """
-pyndb v3.1.1
+pyndb v3.1.2
 
 Author: jvadair
 Creation Date: 4-3-2021
@@ -34,10 +34,10 @@ class PYNDatabase:
         if file.__class__ is dict:
             self.file = None
             self.fileObj = file
-        else:
-            if os.path.exists(file):
-                self.file = file
-            else:  # Create if not exists
+        elif file.__class__ is str:
+            self.file = file
+            if not os.path.exists(file):
+                # Create if not exists
                 t = open(file, 'a+')
                 t.close()
             if filetype == 'pickled':
@@ -72,6 +72,8 @@ class PYNDatabase:
                     else:
                         temp_file_obj.seek(0)
                         self.fileObj = eval(temp_file_obj.read())
+        else:
+            raise TypeError('<file> must be either a filename or a dictionary.')
 
         self.val = self.fileObj
         self.autosave = autosave  # Is checked by set() and create() which call universal.save() if True
