@@ -5,14 +5,14 @@ from pickle import dump as save_pickle
 from json import load as load_json
 from json import dumps as save_json
 
-print('pyndb v3.1.0 loaded')
+print('pyndb v3.1.1 loaded')
 
 """
-pyndb v3.1.0
+pyndb v3.1.1
 
 Author: jvadair
 Creation Date: 4-3-2021
-Last Updated: 9-10-2021
+Last Updated: 9-29-2021
 Codename: Compysition
 
 Overview: pyndb, short for Python Node Database, is a pacakge which makes it
@@ -56,6 +56,7 @@ class PYNDatabase:
                             if temp_file_obj.read() == '':  # If blank
                                 self.fileObj = {}
                             else:
+                                temp_file_obj.seek(0)
                                 self.fileObj = eval(fallback_temp_file_obj.read())
             elif filetype == 'json':
                 with open(file, 'r') as temp_file_obj:
@@ -69,6 +70,7 @@ class PYNDatabase:
                     if temp_file_obj.read() == '':  # If blank
                         self.fileObj = {}
                     else:
+                        temp_file_obj.seek(0)
                         self.fileObj = eval(temp_file_obj.read())
 
         self.val = self.fileObj
