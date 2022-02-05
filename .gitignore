@@ -2,3 +2,7 @@
 __pycache__/
 extras/
 tests/
+*.pyndb
+*.json
+*.txt
+*.pydb

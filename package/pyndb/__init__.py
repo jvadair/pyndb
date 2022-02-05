@@ -5,14 +5,14 @@ from pickle import dump as save_pickle
 from json import load as load_json
 from json import dumps as save_json
 
-print('pyndb v3.1.2 loaded')
+print('pyndb v3.2.0 loaded')
 
 """
-pyndb v3.1.2
+pyndb v3.2.0
 
 Author: jvadair
 Creation Date: 4-3-2021
-Last Updated: 9-29-2021
+Last Updated: 2-5-2022
 Codename: Compysition
 
 Overview: pyndb, short for Python Node Database, is a pacakge which makes it
@@ -29,7 +29,7 @@ was not released to the public.
 # TODO: create a rename function
 
 class PYNDatabase:
-    def __init__(self, file, autosave=False, filetype='pickled'):
+    def __init__(self, file, autosave=False, filetype=None):
         self.filetype = filetype
         if file.__class__ is dict:
             self.file = None
@@ -40,7 +40,19 @@ class PYNDatabase:
                 # Create if not exists
                 t = open(file, 'a+')
                 t.close()
-            if filetype == 'pickled':
+            
+            if self.filetype is None:  # If there is no preset filename,
+                if '.' in self.file:  # And the file has an extension...
+                    if not file.startswith('.') or file.count('.') == 1:  # If this is a hidden file, make sure it has an extension
+                        extension = self.file.split('.')
+                        extension = extension[len(extension)-1]  # Changes the extension to whatever comes after the last period
+                        if extension in ('json', 'txt', 'pydb'):  # Recognized file extensions (aside from .pyndb)
+                            self.filetype = extension
+                        else:  # .pyndb and any unrecognized extensions default to a pickled filetype
+                            self.filetype = 'pickled'
+                        
+
+            if self.filetype == 'pickled':
                 with open(file, 'rb') as temp_file_obj:
                     try:
                         self.fileObj = load_pickle(temp_file_obj)
@@ -58,7 +70,7 @@ class PYNDatabase:
                             else:
                                 temp_file_obj.seek(0)
                                 self.fileObj = eval(fallback_temp_file_obj.read())
-            elif filetype == 'json':
+            elif self.filetype == 'json':
                 with open(file, 'r') as temp_file_obj:
                     if temp_file_obj.read() == '':  # If blank
                         self.fileObj = {}
