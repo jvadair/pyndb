@@ -5,17 +5,17 @@ from pickle import dump as save_pickle
 from json import load as load_json
 from json import dumps as save_json
 
-print('pyndb v3.2.0 loaded')
+print('pyndb v3.3.0 loaded')
 
 """
-pyndb v3.2.0
+pyndb v3.3.0
 
 Author: jvadair
 Creation Date: 4-3-2021
 Last Updated: 2-5-2022
 Codename: Compysition
 
-Overview: pyndb, short for Python Node Database, is a pacakge which makes it
+Overview: pyndb, short for Python Node Database, is a package which makes it
 easy to save data to a file while also providing syntactic convenience. It
 utilizes a Node structure which allows for easily retrieving nested objects. All
 data is wrapped inside of a custom Node object, and stored to file as nested
@@ -26,7 +26,7 @@ was not released to the public.
 """
 
 
-# TODO: create a rename function
+# TODO: create a rename function, create a has_any function
 
 class PYNDatabase:
     def __init__(self, file, autosave=False, filetype=None):
@@ -40,7 +40,7 @@ class PYNDatabase:
                 # Create if not exists
                 t = open(file, 'a+')
                 t.close()
-            
+
             if self.filetype is None:  # If there is no preset filename,
                 if '.' in self.file:  # And the file has an extension...
                     if not file.startswith('.') or file.count('.') == 1:  # If this is a hidden file, make sure it has an extension
@@ -50,7 +50,7 @@ class PYNDatabase:
                             self.filetype = extension
                         else:  # .pyndb and any unrecognized extensions default to a pickled filetype
                             self.filetype = 'pickled'
-                        
+
 
             if self.filetype == 'pickled':
                 with open(file, 'rb') as temp_file_obj:
@@ -127,35 +127,47 @@ class PYNDatabase:
                 if self.universal.autosave:
                     self.universal.save()
 
-        def get(self, name):
-            return getattr(self, name)
+        def get(self, *names):
+            if len(names) == 1:  # If the user requests a single name,
+                return getattr(self, names[0])  # Return a single Node, not a tuple.
+            else:
+                return tuple(getattr(self, name) for name in names)
 
-        def delete(self, name):
-            delattr(self, name)  # Removes the Node object
-            del self.val[name]  # Removes the key from the represented dictionary
-            if self.universal.autosave:
+        def delete(self, *names):
+            for name in names:  # Makes sure that all the names exist
+                if not hasattr(self, name):
+                    raise self.universal.Error.DoesntExist(name)
+
+            for name in names:  # Deletes all selected Nodes
+                delattr(self, name)  # Removes the Node object
+                del self.val[name]  # Removes the key from the represented dictionary
+
+            if self.universal.autosave:  # Finally, save
                 self.universal.save()
 
-        def create(self, name, val=None):
+        def create(self, *names, val=None):
             # Prevents val from being mutable
             if val is None:
                 val = {}
 
-            if hasattr(self, name):
-                raise self.universal.Error.AlreadyExists(name)
-
-            elif name in self.universal.CORE_NAMES:
-                raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
-
-            elif type(self.val) is not dict:
+            if type(self.val) is not dict:
                 raise TypeError(f''
                                 f'{self.name} is {str(type(self.val))}, and must be dict. Consider using the '
                                 f'transform method to resolve this issue.')
-            else:
+
+            for name in names:  # Error checking occurs first
+                if hasattr(self, name):
+                    raise self.universal.Error.AlreadyExists(name)
+
+                elif name in self.universal.CORE_NAMES:
+                    raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
+
+            for name in names:  # Then, if no errors are found, create the Nodes
                 setattr(self, name, self.universal.Node(name, val, self.universal))
                 self.val[name] = val
-                if self.universal.autosave:
-                    self.universal.save()
+
+            if self.universal.autosave:  # Finally, save all changes
+                self.universal.save()
 
         def transform(self, name, new_name):
             if type(new_name) is not str:
@@ -169,11 +181,14 @@ class PYNDatabase:
                 if self.universal.autosave:
                     self.universal.save()
 
-        def has(self, name):
+        def has(self, *names):
             attrs = dir(self)
             attrs[:] = [a for a in attrs if
                         not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES]
-            return True if name in attrs else False
+            for name in names:
+                if name not in attrs:
+                    return False  # If any aren't found
+            return True  # If all are found
 
         def values(self):
             attrs = dir(self)
@@ -227,10 +242,16 @@ class PYNDatabase:
             class InvalidName(Exception):
                 pass
 
+            class DoesntExist(Exception):
+                pass
+
     # ----- Master functions -----
 
-    def get(self, name):
-        return getattr(self, name)
+    def get(self, *names):
+        if len(names) == 1:  # If the user requests a single name,
+            return getattr(self, names[0])  # Return a single Node, not a tuple.
+        else:
+            return tuple(getattr(self, name) for name in names)
 
     def set(self, name, data, create_if_not_exist=True):
         if name in self.universal.CORE_NAMES + self.universal.MASTER_NAMES:  # If the name is a Core Name
@@ -253,29 +274,37 @@ class PYNDatabase:
             if self.autosave:
                 self.save()
 
-    def create(self, name, val=None):
+    def create(self, *names, val=None):
         # Prevents val from being mutable
         if val is None:
             val = {}
 
-        if hasattr(self, name):
-            raise self.universal.Error.AlreadyExists(name)
-
         # The dict type check is not necessary for a master function, as self.fileObj will always be a dict.
 
-        elif name in self.universal.CORE_NAMES:
-            raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
+        for name in names:  # Error checking occurs first
+            if hasattr(self, name):
+                raise self.universal.Error.AlreadyExists(name)
 
-        else:
+            elif name in self.universal.CORE_NAMES:
+                raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
+
+        for name in names:  # Then, if no errors are found, create the Nodes
             setattr(self, name, self.Node(name, val, self.universal))
             self.fileObj[name] = val
-            if self.autosave:
-                self.save()
 
-    def delete(self, name):
-        delattr(self, name)  # Removes the Node object
-        del self.fileObj[name]  # Removes the key from the main dictionary
-        if self.autosave:
+        if self.autosave:  # Finally, save all changes
+            self.save()
+
+    def delete(self, *names):
+        for name in names:  # Makes sure that all the names exist
+            if not hasattr(self, name):
+                raise self.universal.Error.DoesntExist(name)
+
+        for name in names:  # Deletes all selected Nodes
+            delattr(self, name)  # Removes the Node object
+            del self.fileObj[name]  # Removes the key from the main dictionary
+
+        if self.autosave:  # Finally, save
             self.save()
 
     def transform(self, name, new_name):
@@ -291,11 +320,14 @@ class PYNDatabase:
             if self.autosave:
                 self.save()
 
-    def has(self, name):
+    def has(self, *names):
         attrs = dir(self)
         attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith(
             '__')) and a not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES]
-        return True if name in attrs else False
+        for name in names:
+            if name not in attrs:
+                return False  # If any aren't found
+        return True  # If all are found
 
     def values(self):
         attrs = dir(self)
