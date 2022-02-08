@@ -5,14 +5,14 @@ from pickle import dump as save_pickle
 from json import load as load_json
 from json import dumps as save_json
 
-print('pyndb v3.3.0 loaded')
+print('pyndb v3.3.1 loaded')
 
 """
-pyndb v3.3.0
+pyndb v3.3.1
 
 Author: jvadair
 Creation Date: 4-3-2021
-Last Updated: 2-5-2022
+Last Updated: 2-7-2022
 Codename: Compysition
 
 Overview: pyndb, short for Python Node Database, is a package which makes it
@@ -50,7 +50,8 @@ class PYNDatabase:
                             self.filetype = extension
                         else:  # .pyndb and any unrecognized extensions default to a pickled filetype
                             self.filetype = 'pickled'
-
+                else:  # Files without extensions are also pickled by default!
+                    self.filetype = 'pickled'
 
             if self.filetype == 'pickled':
                 with open(file, 'rb') as temp_file_obj:
