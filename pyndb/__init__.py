@@ -5,14 +5,14 @@ from pickle import dump as save_pickle
 from json import load as load_json
 from json import dumps as save_json
 
-print('pyndb v3.3.1 loaded')
+print('pyndb v3.3.2 loaded')
 
 """
-pyndb v3.3.1
+pyndb v3.3.2
 
 Author: jvadair
 Creation Date: 4-3-2021
-Last Updated: 2-7-2022
+Last Updated: 5-25-2022
 Codename: Compysition
 
 Overview: pyndb, short for Python Node Database, is a package which makes it

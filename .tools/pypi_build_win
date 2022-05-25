@@ -1,9 +1,6 @@
 #!/bin/bash
-cp pyndb.py package/pyndb/__init__.py
-cp README.md package/README.md
-cp LICENSE package/LICENSE
-mv package/dist/* package/dist_old/
-cd package
+cd ..
+mv dist/* dist_old/
 printf "Enter version #: "
 read vnum
 printf "Enter previous version #: "
