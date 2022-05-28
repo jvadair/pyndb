@@ -2,35 +2,42 @@ import os
 from pickle import HIGHEST_PROTOCOL, UnpicklingError
 from pickle import load as load_pickle
 from pickle import dump as save_pickle
+from pickle import dumps as pickle_to_string
 from json import load as load_json
 from json import dumps as save_json
+from pyndb.encryption import encrypt, decrypt, InvalidToken
+from io import BytesIO
 
-print('pyndb v3.3.2 loaded')
+print('pyndb v3.4.0 loaded')
 
 """
-pyndb v3.3.2
+pyndb v3.4.0
 
 Author: jvadair
 Creation Date: 4-3-2021
-Last Updated: 5-25-2022
-Codename: Compysition
+Last Updated: 5-28-2022
+Codename: Encrpyt
 
 Overview: pyndb, short for Python Node Database, is a package which makes it
 easy to save data to a file while also providing syntactic convenience. It
-utilizes a Node structure which allows for easily retrieving nested objects. All
-data is wrapped inside of a custom Node object, and stored to file as nested
-dictionaries. It provides additional capabilities such as autosave, saving a
-dictionary to file, creating a file if none exists, and more. The original
-program was developed with the sole purpose of saving dictionaries to files, and
-was not released to the public.
+utilizes a Node structure which allows for easily retrieving nested objects.
+All data is wrapped inside of a custom Node object, and stored to file as
+nested dictionaries. It provides additional capabilities such as autosave, 
+saving a dictionary to file, creating a file if none exists, encryption and 
+more. The  original program was developed with the sole purpose of saving 
+dictionaries to files, and was not released to the public.
 """
 
 
-# TODO: create a rename function, create a has_any function
+# TODO: rename function, has_any function, update function
 
 class PYNDatabase:
-    def __init__(self, file, autosave=False, filetype=None):
+    def __init__(self, file, autosave=False, filetype=None, password:str=None, salt:bytes=None, iterations:int=None):
         self.filetype = filetype
+        self.password = password.encode() if password else None
+        self.salt = salt if salt else b'pyndb_default'
+        self.iterations = iterations if iterations else 390000
+        isnewfile = False
         if file.__class__ is dict:
             self.file = None
             self.fileObj = file
@@ -40,12 +47,15 @@ class PYNDatabase:
                 # Create if not exists
                 t = open(file, 'a+')
                 t.close()
+                isnewfile = True
 
             if self.filetype is None:  # If there is no preset filename,
                 if '.' in self.file:  # And the file has an extension...
-                    if not file.startswith('.') or file.count('.') == 1:  # If this is a hidden file, make sure it has an extension
+                    if not file.startswith('.') or file.count('.') == 1:
+                        # If this is a hidden file, make sure it has an extension
                         extension = self.file.split('.')
-                        extension = extension[len(extension)-1]  # Changes the extension to whatever comes after the last period
+                        # Changes the extension to whatever comes after the last period
+                        extension = extension[len(extension)-1]
                         if extension in ('json', 'txt', 'pydb'):  # Recognized file extensions (aside from .pyndb)
                             self.filetype = extension
                         else:  # .pyndb and any unrecognized extensions default to a pickled filetype
@@ -53,8 +63,16 @@ class PYNDatabase:
                 else:  # Files without extensions are also pickled by default!
                     self.filetype = 'pickled'
 
-            if self.filetype == 'pickled':
-                with open(file, 'rb') as temp_file_obj:
+            with open(file, 'rb') as temp_file_obj:
+                if self.password and not isnewfile:
+                    try:
+                        temp_file_obj = decrypt(temp_file_obj.read(), self.password, self.salt, self.iterations)
+                        temp_file_obj = BytesIO(temp_file_obj)  # Reconverts the data into its previous form
+                    except InvalidToken:
+                        print('Invalid token, attempting to load the database without a password.')
+                        self.password = None
+                        temp_file_obj.seek(0)
+                if self.filetype == 'pickled':
                     try:
                         self.fileObj = load_pickle(temp_file_obj)
                     except EOFError:  # Could possibly be a bad solution to this
@@ -71,20 +89,18 @@ class PYNDatabase:
                             else:
                                 temp_file_obj.seek(0)
                                 self.fileObj = eval(fallback_temp_file_obj.read())
-            elif self.filetype == 'json':
-                with open(file, 'r') as temp_file_obj:
-                    if temp_file_obj.read() == '':  # If blank
+                elif self.filetype == 'json':
+                    if temp_file_obj.read() == b'':  # If blank
                         self.fileObj = {}
                     else:
                         temp_file_obj.seek(0)  # Must seek because the read method above seeks to the end of the file
                         self.fileObj = load_json(temp_file_obj)
-            else:  # Assume plaintext otherwise
-                with open(file, 'r') as temp_file_obj:
-                    if temp_file_obj.read() == '':  # If blank
+                else:  # Assume plaintext otherwise
+                    if temp_file_obj.read() == b'':  # If blank
                         self.fileObj = {}
                     else:
                         temp_file_obj.seek(0)
-                        self.fileObj = eval(temp_file_obj.read())
+                        self.fileObj = eval(temp_file_obj.read().decode())
         else:
             raise TypeError('<file> must be either a filename or a dictionary.')
 
@@ -92,7 +108,19 @@ class PYNDatabase:
         self.autosave = autosave  # Is checked by set() and create() which call universal.save() if True
         self.universal = self.Universal(self.save, self.autosave, self.Node)
 
-        for key in self.fileObj.keys():
+        if self.password:
+            # This section checks if the file can be loaded properly without a password.
+            # If not, pyndb makes sure to throw an error that actually corresponds with the problem.
+            try:
+                keys = self.fileObj.keys()
+            except AttributeError:
+                raise InvalidToken(
+                    'The authentication you provided is invalid. The database also failed to load without credentials'
+                )
+        else:
+            keys = self.fileObj.keys()
+
+        for key in keys:
             setattr(self, key, self.Node(key, self.fileObj[key], self.universal))
             # consider splitting into separate function to
             # allow easily re-initializing all nodes at once
@@ -349,10 +377,26 @@ class PYNDatabase:
 
         if self.filetype == 'pickled':
             with open(file, 'wb') as temp_file_obj:
-                save_pickle(self.fileObj, temp_file_obj, HIGHEST_PROTOCOL)
+                if self.password:
+                    data = pickle_to_string(self.fileObj, HIGHEST_PROTOCOL)
+                    data = encrypt(data, self.password, self.salt, self.iterations)
+                    temp_file_obj.write(data)
+                else:
+                    save_pickle(self.fileObj, temp_file_obj, HIGHEST_PROTOCOL)
         elif self.filetype == 'json':  # plaintext
-            with open(file, 'w') as temp_file_obj:
-                temp_file_obj.write(save_json(self.fileObj, indent=2, sort_keys=True))
+            if self.password:
+                with open(file, 'wb') as temp_file_obj:
+                    data = save_json(self.fileObj, indent=2, sort_keys=True)
+                    data = encrypt(data.encode(), self.password, self.salt, self.iterations)
+                    temp_file_obj.write(data)
+            else:
+                with open(file, 'w') as temp_file_obj:
+                    temp_file_obj.write(save_json(self.fileObj, indent=2, sort_keys=True))
         else:  # plaintext
-            with open(file, 'w') as temp_file_obj:
-                temp_file_obj.write(str(self.fileObj))
+            if self.password:
+                with open(file, 'wb') as temp_file_obj:
+                    data = encrypt(str(self.fileObj).encode(), self.password, self.salt, self.iterations)
+                    temp_file_obj.write(data)
+            else:
+                with open(file, 'w') as temp_file_obj:
+                    temp_file_obj.write(str(self.fileObj))
