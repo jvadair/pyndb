@@ -8,14 +8,14 @@ from json import dumps as save_json
 from pyndb.encryption import encrypt, decrypt, InvalidToken
 from io import BytesIO
 
-print('pyndb v3.4.0 loaded')
+print('pyndb v3.4.1 loaded')
 
 """
-pyndb v3.4.0
+pyndb v3.4.1
 
 Author: jvadair
 Creation Date: 4-3-2021
-Last Updated: 5-28-2022
+Last Updated: 6-16-2022
 Codename: Encrpyt
 
 Overview: pyndb, short for Python Node Database, is a package which makes it
@@ -32,6 +32,12 @@ dictionaries to files, and was not released to the public.
 # TODO: rename function, has_any function, update function
 
 class PYNDatabase:
+    """
+    A PYNDatabase object can be initialized with a filename (string), or a dictionary. You can also set the autosave
+    flag, which will only work if a filename is set (otherwise the dictionary object will be updated automatically).
+    These values CAN be changed later, by changing PYNDatabase.<file | autosave>. You can use encryption on any file
+    type supported by pyndb by specifying the password flag. See the documentation for more info.
+    """
     def __init__(self, file, autosave=False, filetype=None, password:str=None, salt:bytes=None, iterations:int=None):
         self.filetype = filetype
         self.password = password.encode() if password else None
@@ -126,6 +132,12 @@ class PYNDatabase:
             # allow easily re-initializing all nodes at once
 
     class Node:
+        """
+        All keys in a dictionary (loaded from file/object) managed by a PYNDatabase object will be represented as
+        Node objects. Each Node object scans the dictionary it represents, and creates new Nodes for each key. This
+        process repeats recursively. A Node object can also represent any other class, but you must then use the
+        transform method - or replace the value with a dictionary - in order to create a subnode.
+        """
         def __init__(self, name, val, universal):
             self.val = val
             self.name = name
@@ -136,6 +148,11 @@ class PYNDatabase:
                     # Each node gains the value of the key it represents
 
         def set(self, name, data, create_if_not_exist=True):
+            """
+            To change the value of a Node, you must use the set method from the parent Node. set will create new
+            values if they don't exist, but this can be changed by setting the create_if_not_exist flag to False.
+            This way it will just raise a NameError.
+            """
             if name in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
                 raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
 
@@ -157,12 +174,19 @@ class PYNDatabase:
                     self.universal.save()
 
         def get(self, *names):
+            """
+            To dynamically retrieve a Node, you can use the get method. The get method is also the only way to
+            retrieve values which contain characters not in the alphabet (+the underscore character).
+            """
             if len(names) == 1:  # If the user requests a single name,
                 return getattr(self, names[0])  # Return a single Node, not a tuple.
             else:
                 return tuple(getattr(self, name) for name in names)
 
         def delete(self, *names):
+            """
+            Deletes as many Nodes as you specify.
+            """
             for name in names:  # Makes sure that all the names exist
                 if not hasattr(self, name):
                     raise self.universal.Error.DoesntExist(name)
@@ -175,6 +199,11 @@ class PYNDatabase:
                 self.universal.save()
 
         def create(self, *names, val=None):
+            """
+            Although you can create values using the set method, the create method will ultimately be called in order to
+            do so. Additionally, the create method allows you to create multiple new Nodes. If the val flag is set to
+            None (default), then the new Nodes will have a val of {} (an empty dictionary).
+            """
             # Prevents val from being mutable
             if val is None:
                 val = {}
@@ -199,6 +228,10 @@ class PYNDatabase:
                 self.universal.save()
 
         def transform(self, name, new_name):
+            """
+            The transform method places the existing value of a Node into a dictionary under a user-defined key. This
+            way, you can create new Nodes inside your existing one.
+            """
             if type(new_name) is not str:
                 raise self.universal.Error.InvalidName(f'{new_name} is {type(new_name)}, and must be str')
 
@@ -211,6 +244,10 @@ class PYNDatabase:
                     self.universal.save()
 
         def has(self, *names):
+            """
+            To see if a Node with a specific name(s) is located within a parent, you can use the has method. If
+            multiple names are entered, True will be returned only if the Node has ALL the names.
+            """
             attrs = dir(self)
             attrs[:] = [a for a in attrs if
                         not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES]
@@ -220,6 +257,10 @@ class PYNDatabase:
             return True  # If all are found
 
         def values(self):
+            """
+            To view all the children inside a Node, you can call the values method (which is basically a
+            glorified version of the dir command).
+            """
             attrs = dir(self)
             attrs[:] = [a for a in attrs if
                         not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES]
@@ -277,12 +318,21 @@ class PYNDatabase:
     # ----- Master functions -----
 
     def get(self, *names):
+        """
+        To dynamically retrieve a Node, you can use the get method. The get method is also the only way to
+        retrieve values which contain characters not in the alphabet (+the underscore character).
+        """
         if len(names) == 1:  # If the user requests a single name,
             return getattr(self, names[0])  # Return a single Node, not a tuple.
         else:
             return tuple(getattr(self, name) for name in names)
 
     def set(self, name, data, create_if_not_exist=True):
+        """
+        To change the value of a Node, you must use the set method from the parent Node. set will create new
+        values if they don't exist, but this can be changed by setting the create_if_not_exist flag to False.
+        This way it will just raise a NameError.
+        """
         if name in self.universal.CORE_NAMES + self.universal.MASTER_NAMES:  # If the name is a Core Name
             # Master names are only taken into account in this statement, not in the Node version of set()
             raise self.universal.Error.CoreName(f'Cannot assign name: {name} is a Core Name.')
@@ -304,6 +354,11 @@ class PYNDatabase:
                 self.save()
 
     def create(self, *names, val=None):
+        """
+        Although you can create values using the set method, the create method will ultimately be called in order to
+        do so. Additionally, the create method allows you to create multiple new Nodes. If the val flag is set to
+        None (default), then the new Nodes will have a val of {} (an empty dictionary).
+        """
         # Prevents val from being mutable
         if val is None:
             val = {}
@@ -325,6 +380,9 @@ class PYNDatabase:
             self.save()
 
     def delete(self, *names):
+        """
+        Deletes as many Nodes as you specify.
+        """
         for name in names:  # Makes sure that all the names exist
             if not hasattr(self, name):
                 raise self.universal.Error.DoesntExist(name)
@@ -337,11 +395,15 @@ class PYNDatabase:
             self.save()
 
     def transform(self, name, new_name):
+        """
+        The transform method places the existing value of a Node into a dictionary under a user-defined key. This
+        way, you can create new Nodes inside your existing one.
+        """
         if type(new_name) is not str:
             raise self.universal.Error.InvalidName(f'{new_name} is {type(new_name)}, and must be str')
 
         elif name in self.universal.CORE_NAMES:  # Makes sure the name does not conflict with the Core Names
-            # Master name check is not necessary, as the new_name object will be inside of the name Node
+            # Master name check is not necessary, as the new_name object will be inside the name Node
             raise self.universal.Error.CoreName(f'Cannot assign name: {new_name} is a Core Name.')
 
         else:
@@ -350,6 +412,10 @@ class PYNDatabase:
                 self.save()
 
     def has(self, *names):
+        """
+        To see if a Node with a specific name(s) is located within a parent, you can use the has method. If
+        multiple names are entered, True will be returned only if the Node has ALL the names.
+        """
         attrs = dir(self)
         attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith(
             '__')) and a not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES]
@@ -359,12 +425,22 @@ class PYNDatabase:
         return True  # If all are found
 
     def values(self):
+        """
+        To view all the children inside a Node, you can call the values method (which is basically a
+        glorified version of the dir command).
+        """
         attrs = dir(self)
         attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith(
             '__')) and a not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES]
         return attrs
 
     def save(self, file=None):
+        """
+        If a PYNDatabase object is initialized with a dictionary, it will update the original dictionary object as
+        changes are made. Otherwise, you must call PYNDatabase.save() (unless autosave is set to True). The save
+        method also has a file flag, which allows for easily saving to another file. The file type can be changed
+        by setting the filetype parameter of the main class (see Pickling).
+        """
         if file:
             pass
         elif self.file:
@@ -373,7 +449,7 @@ class PYNDatabase:
             raise self.universal.Error.FileError(
                 'Cannot open file: Class was initiated with dictionary object rather than filename. '
                 'Set the file argument on this method to save to a file different than the one this class was '
-                'initiated with, or change its file paramater.')
+                'initiated with, or change its file parameter.')
 
         if self.filetype == 'pickled':
             with open(file, 'wb') as temp_file_obj:
