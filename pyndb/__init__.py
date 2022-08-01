@@ -8,14 +8,14 @@ from json import dumps as save_json
 from pyndb.encryption import encrypt, decrypt, InvalidToken
 from io import BytesIO
 
-print('pyndb v3.4.1 loaded')
+print('pyndb v3.4.2 loaded')
 
 """
-pyndb v3.4.1
+pyndb v3.4.2
 
 Author: jvadair
 Creation Date: 4-3-2021
-Last Updated: 6-16-2022
+Last Updated: 8-1-2022
 Codename: Encrpyt
 
 Overview: pyndb, short for Python Node Database, is a package which makes it
@@ -296,7 +296,10 @@ class PYNDatabase:
                 'autosave',
                 'file',
                 'fileObj',
-                'filetype'
+                'filetype',
+                'password',
+                'salt',
+                'iterations'
             ]
 
         class Error:
