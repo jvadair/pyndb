@@ -5,17 +5,18 @@ from pickle import dump as save_pickle
 from pickle import dumps as pickle_to_string
 from json import load as load_json
 from json import dumps as save_json
+from json.decoder import JSONDecodeError
 from pyndb.encryption import encrypt, decrypt, InvalidToken
 from io import BytesIO
 
-print('pyndb v3.4.2 loaded')
+print('pyndb v3.4.3 loaded')
 
 """
-pyndb v3.4.2
+pyndb v3.4.3
 
 Author: jvadair
 Creation Date: 4-3-2021
-Last Updated: 8-1-2022
+Last Updated: 8-3-2022
 Codename: Encrpyt
 
 Overview: pyndb, short for Python Node Database, is a package which makes it
@@ -40,7 +41,7 @@ class PYNDatabase:
     """
     def __init__(self, file, autosave=False, filetype=None, password:str=None, salt:bytes=None, iterations:int=None):
         self.filetype = filetype
-        self.password = password.encode() if password else None
+        self.password = password
         self.salt = salt if salt else b'pyndb_default'
         self.iterations = iterations if iterations else 390000
         isnewfile = False
@@ -72,41 +73,49 @@ class PYNDatabase:
             with open(file, 'rb') as temp_file_obj:
                 if self.password and not isnewfile:
                     try:
-                        temp_file_obj = decrypt(temp_file_obj.read(), self.password, self.salt, self.iterations)
+                        temp_file_obj = decrypt(temp_file_obj.read(), self.password.encode(), self.salt, self.iterations)
                         temp_file_obj = BytesIO(temp_file_obj)  # Reconverts the data into its previous form
+                        password_failed = False
                     except InvalidToken:
                         print('Invalid token, attempting to load the database without a password.')
+                        password_failed = True
                         self.password = None
                         temp_file_obj.seek(0)
-                if self.filetype == 'pickled':
-                    try:
-                        self.fileObj = load_pickle(temp_file_obj)
-                    except EOFError:  # Could possibly be a bad solution to this
-                        self.fileObj = {}
-                    except UnpicklingError:
-                        print('WARNING: This database was saved as plaintext, '
-                              'but loaded as a pickled database. It has been loaded '
-                              'as plaintext, but this may be deprecated in the '
-                              'future. Check the documentation for further info.')
-                        self.filetype = 'plaintext'
-                        with open(self.file, 'r') as fallback_temp_file_obj:
-                            if temp_file_obj.read() == '':  # If blank
-                                self.fileObj = {}
-                            else:
-                                temp_file_obj.seek(0)
-                                self.fileObj = eval(fallback_temp_file_obj.read())
-                elif self.filetype == 'json':
-                    if temp_file_obj.read() == b'':  # If blank
-                        self.fileObj = {}
+                try:
+                    if self.filetype == 'pickled':
+                        try:
+                            self.fileObj = load_pickle(temp_file_obj)
+                        except EOFError:  # Could possibly be a bad solution to this
+                            self.fileObj = {}
+                        except UnpicklingError:
+                            print('WARNING: This database was saved as plaintext, '
+                                  'but loaded as a pickled database. It has been loaded '
+                                  'as plaintext, but this may be deprecated in the '
+                                  'future. Check the documentation for further info.')
+                            self.filetype = 'plaintext'
+                            with open(self.file, 'r') as fallback_temp_file_obj:
+                                if temp_file_obj.read() == '':  # If blank
+                                    self.fileObj = {}
+                                else:
+                                    temp_file_obj.seek(0)
+                                    self.fileObj = eval(fallback_temp_file_obj.read())
+                    elif self.filetype == 'json':
+                        if temp_file_obj.read() == b'':  # If blank
+                            self.fileObj = {}
+                        else:
+                            temp_file_obj.seek(0)  # Must seek because the read method above seeks to the end of the file
+                            self.fileObj = load_json(temp_file_obj)
+                    else:  # Assume plaintext otherwise
+                        if temp_file_obj.read() == b'':  # If blank
+                            self.fileObj = {}
+                        else:
+                            temp_file_obj.seek(0)
+                            self.fileObj = eval(temp_file_obj.read().decode())
+                except (SyntaxError, JSONDecodeError) as E:
+                    if password_failed:
+                        raise self.Universal.Error.InvalidPassword()
                     else:
-                        temp_file_obj.seek(0)  # Must seek because the read method above seeks to the end of the file
-                        self.fileObj = load_json(temp_file_obj)
-                else:  # Assume plaintext otherwise
-                    if temp_file_obj.read() == b'':  # If blank
-                        self.fileObj = {}
-                    else:
-                        temp_file_obj.seek(0)
-                        self.fileObj = eval(temp_file_obj.read().decode())
+                        raise E
         else:
             raise TypeError('<file> must be either a filename or a dictionary.')
 
@@ -318,6 +327,9 @@ class PYNDatabase:
             class DoesntExist(Exception):
                 pass
 
+            class InvalidPassword(Exception):
+                pass
+
     # ----- Master functions -----
 
     def get(self, *names):
@@ -458,7 +470,7 @@ class PYNDatabase:
             with open(file, 'wb') as temp_file_obj:
                 if self.password:
                     data = pickle_to_string(self.fileObj, HIGHEST_PROTOCOL)
-                    data = encrypt(data, self.password, self.salt, self.iterations)
+                    data = encrypt(data, self.password.encode(), self.salt, self.iterations)
                     temp_file_obj.write(data)
                 else:
                     save_pickle(self.fileObj, temp_file_obj, HIGHEST_PROTOCOL)
@@ -466,7 +478,7 @@ class PYNDatabase:
             if self.password:
                 with open(file, 'wb') as temp_file_obj:
                     data = save_json(self.fileObj, indent=2, sort_keys=True)
-                    data = encrypt(data.encode(), self.password, self.salt, self.iterations)
+                    data = encrypt(data.encode(), self.password.encode(), self.salt, self.iterations)
                     temp_file_obj.write(data)
             else:
                 with open(file, 'w') as temp_file_obj:
@@ -474,7 +486,7 @@ class PYNDatabase:
         else:  # plaintext
             if self.password:
                 with open(file, 'wb') as temp_file_obj:
-                    data = encrypt(str(self.fileObj).encode(), self.password, self.salt, self.iterations)
+                    data = encrypt(str(self.fileObj).encode(), self.password.encode(), self.salt, self.iterations)
                     temp_file_obj.write(data)
             else:
                 with open(file, 'w') as temp_file_obj:
