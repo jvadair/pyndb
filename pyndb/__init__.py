@@ -8,15 +8,16 @@ from json import dumps as save_json
 from json.decoder import JSONDecodeError
 from pyndb.encryption import encrypt, decrypt, InvalidToken
 from io import BytesIO
+from functools import reduce
 
-print('pyndb v3.4.3 loaded')
+print('pyndb v3.5.0 loaded')
 
 """
-pyndb v3.4.3
+pyndb v3.5.0
 
 Author: jvadair
 Creation Date: 4-3-2021
-Last Updated: 8-3-2022
+Last Updated: 8-7-2022
 Codename: Encrpyt
 
 Overview: pyndb, short for Python Node Database, is a package which makes it
@@ -182,15 +183,16 @@ class PYNDatabase:
                 if self.universal.autosave:
                     self.universal.save()
 
-        def get(self, *names):
+        def get(self, *names, ignore_dots=False):
             """
             To dynamically retrieve a Node, you can use the get method. The get method is also the only way to
             retrieve values which contain characters not in the alphabet (+the underscore character).
             """
             if len(names) == 1:  # If the user requests a single name,
-                return getattr(self, names[0])  # Return a single Node, not a tuple.
+                # Return a single Node, not a tuple.
+                return reduce(getattr, (names[0],) if ignore_dots else names[0].split('.'), self)
             else:
-                return tuple(getattr(self, name) for name in names)
+                return tuple(reduce(getattr, (names[0],) if ignore_dots else names[0].split('.'), self) for name in names)
 
         def delete(self, *names):
             """
@@ -252,16 +254,15 @@ class PYNDatabase:
                 if self.universal.autosave:
                     self.universal.save()
 
-        def has(self, *names):
+        def has(self, *names, ignore_dots=False):
             """
             To see if a Node with a specific name(s) is located within a parent, you can use the has method. If
             multiple names are entered, True will be returned only if the Node has ALL the names.
             """
-            attrs = dir(self)
-            attrs[:] = [a for a in attrs if
-                        not (a.startswith('__') and a.endswith('__')) and a not in self.universal.CORE_NAMES]
             for name in names:
-                if name not in attrs:
+                try:
+                    self.get(name, ignore_dots=ignore_dots)
+                except AttributeError:
                     return False  # If any aren't found
             return True  # If all are found
 
@@ -332,15 +333,16 @@ class PYNDatabase:
 
     # ----- Master functions -----
 
-    def get(self, *names):
+    def get(self, *names, ignore_dots=False):
         """
         To dynamically retrieve a Node, you can use the get method. The get method is also the only way to
         retrieve values which contain characters not in the alphabet (+the underscore character).
         """
         if len(names) == 1:  # If the user requests a single name,
-            return getattr(self, names[0])  # Return a single Node, not a tuple.
+            # Return a single Node, not a tuple.
+            return reduce(getattr, (names[0],) if ignore_dots else names[0].split('.'), self)
         else:
-            return tuple(getattr(self, name) for name in names)
+            return tuple(reduce(getattr, (names[0],) if ignore_dots else names[0].split('.'), self) for name in names)
 
     def set(self, name, data, create_if_not_exist=True):
         """
@@ -426,16 +428,15 @@ class PYNDatabase:
             if self.autosave:
                 self.save()
 
-    def has(self, *names):
+    def has(self, *names, ignore_dots=False):
         """
         To see if a Node with a specific name(s) is located within a parent, you can use the has method. If
         multiple names are entered, True will be returned only if the Node has ALL the names.
         """
-        attrs = dir(self)
-        attrs[:] = [a for a in attrs if not (a.startswith('__') and a.endswith(
-            '__')) and a not in self.universal.CORE_NAMES + self.universal.MASTER_NAMES]
         for name in names:
-            if name not in attrs:
+            try:
+                self.get(name, ignore_dots=ignore_dots)
+            except AttributeError:
                 return False  # If any aren't found
         return True  # If all are found
 
